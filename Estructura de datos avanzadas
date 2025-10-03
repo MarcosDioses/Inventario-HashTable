@@ -1,0 +1,143 @@
+#include <iostream> // incluye librería para entrada y salida en consola
+#include <list> // incluye la librería para usar listas enlazadas
+#include <vector> // incluye la librería para usar vectores dinámicos
+#include <string> // incluye la librería para manejar cadenas de texto
+
+// se define la clase HashTable que implementa una tabla hash simple
+class HashTable {
+private:
+    int capacity; // almacena la capacidad o número de cubetas
+    std::vector<std::list<std::pair<std::string, int>>> table; // vector de listas para manejar colisiones
+
+    // función hash que calcula el índice en la tabla a partir de una clave string
+    int hashFunction(const std::string& key) {
+        int hashValue = 0; // inicializa la suma en 0
+        for (char ch : key) { // recorre cada caracter de la clave
+            hashValue += ch; // suma el valor ascii del caracter
+        }
+        return hashValue % capacity; // devuelve el índice dentro del rango
+    }
+
+public:
+    // constructor que recibe el tamaño inicial de la tabla
+    HashTable(int size) : capacity(size) {
+        table.resize(capacity); // ajusta el vector al tamaño de la capacidad
+    }
+
+    // función para insertar un par clave-valor en la tabla
+    void insert(const std::string& key, int value) {
+        int index = hashFunction(key); // calcula la posición usando la clave
+        for (auto& pair : table[index]) { // recorre los elementos en esa cubeta
+            if (pair.first == key) { // si la clave ya existe
+                pair.second = value; // actualiza el valor
+                return; // sale de la función
+            }
+        }
+        table[index].emplace_back(key, value); // si no existe, agrega el par nuevo
+    }
+
+    // función para buscar un valor usando la clave
+    int search(const std::string& key) {
+        int index = hashFunction(key); // calcula la cubeta donde debe estar la clave
+        for (const auto& pair : table[index]) { // recorre los pares de esa cubeta
+            if (pair.first == key) { // si encuentra la clave
+                return pair.second; // devuelve el valor
+            }
+        }
+        return -1; // devuelve -1 si no se encontró la clave
+    }
+
+    // función para eliminar un elemento por su clave
+    void remove(const std::string& key) {
+        int index = hashFunction(key); // calcula el índice donde debe estar la clave
+        auto& entries = table[index]; // referencia a la lista en esa cubeta
+        for (auto it = entries.begin(); it != entries.end(); ++it) { // recorre los pares de esa lista
+            if (it->first == key) { // si encuentra la clave
+                entries.erase(it); // elimina el par de la lista
+                return; // termina la función
+            }
+        }
+    }
+
+    // función para mostrar todo el inventario
+    void display() {
+        std::cout << "\n=== INVENTARIO COMPLETO ===" << std::endl; // muestra título del inventario
+        for (int i = 0; i < capacity; ++i) { // recorre todas las cubetas
+            if (!table[i].empty()) { // si la cubeta no está vacía
+                std::cout << "Cubeta " << i << ": "; // imprime el número de cubeta
+                for (const auto& pair : table[i]) { // recorre los pares en esa cubeta
+                    std::cout << "{" << pair.first << ": " << pair.second << "} "; // imprime clave y valor
+                }
+                std::cout << std::endl; // salto de línea después de la cubeta
+            }
+        }
+        std::cout << "============================" << std::endl; // muestra fin del inventario
+    }
+};
+
+// función para mostrar el menú principal
+void mostrarMenu() {
+    std::cout << "\n=== SISTEMA DE GESTION DE INVENTARIO ===" << std::endl; // título del sistema
+    std::cout << "a. Agregar producto" << std::endl; // opción para agregar
+    std::cout << "b. Buscar cantidad de producto" << std::endl; // opción para buscar
+    std::cout << "c. Eliminar producto" << std::endl; // opción para eliminar
+    std::cout << "d. Mostrar inventario" << std::endl; // opción para mostrar inventario
+    std::cout << "e. Salir" << std::endl; // opción para salir
+    std::cout << "Seleccione una opcion: "; // pide la opción al usuario
+}
+
+int main() {
+    HashTable ht(10); // crea una tabla hash con 10 cubetas
+    char opcion; // almacena la opción del usuario
+    std::string nombre; // almacena el nombre del producto
+    int cantidad; // almacena la cantidad del producto
+
+    do {
+        mostrarMenu(); // muestra el menú en pantalla
+        std::cin >> opcion; // lee la opción ingresada
+
+        switch (opcion) { // evalúa la opción del usuario
+            case 'a': { // caso para agregar producto
+                std::cout << "Ingrese el nombre del producto: "; // pide el nombre
+                std::cin >> nombre; // lee el nombre
+                std::cout << "Ingrese la cantidad: "; // pide la cantidad
+                std::cin >> cantidad; // lee la cantidad
+                ht.insert(nombre, cantidad); // inserta el producto en la tabla
+                std::cout << "Producto agregado exitosamente." << std::endl; // confirma agregado
+                break; // sale del case
+            }
+            case 'b': { // caso para buscar producto
+                std::cout << "Ingrese el nombre del producto a buscar: "; // pide el nombre
+                std::cin >> nombre; // lee el nombre
+                int resultado = ht.search(nombre); // busca el producto
+                if (resultado != -1) { // si encontró el producto
+                    std::cout << "Cantidad de " << nombre << ": " << resultado << std::endl; // muestra cantidad
+                } else { // si no lo encontró
+                    std::cout << "Producto no encontrado en el inventario." << std::endl; // mensaje de error
+                }
+                break; // sale del case
+            }
+            case 'c': { // caso para eliminar producto
+                std::cout << "Ingrese el nombre del producto a eliminar: "; // pide el nombre
+                std::cin >> nombre; // lee el nombre
+                ht.remove(nombre); // elimina el producto de la tabla
+                std::cout << "Producto eliminado exitosamente." << std::endl; // confirma eliminación
+                break; // sale del case
+            }
+            case 'd': { // caso para mostrar inventario
+                ht.display(); // llama a la función display
+                break; // sale del case
+            }
+            case 'e': { // caso para salir
+                std::cout << "Saliendo del sistema..." << std::endl; // mensaje de salida
+                break; // sale del case
+            }
+            default: { // caso por defecto si la opción no es válida
+                std::cout << "Opcion no valida. Por favor, intente nuevamente." << std::endl; // mensaje de error
+                break; // sale del case
+            }
+        }
+    } while (opcion != 'e'); // repite hasta que la opción sea salir
+
+    return 0; // retorna 0 indicando que terminó correctamente
+}
